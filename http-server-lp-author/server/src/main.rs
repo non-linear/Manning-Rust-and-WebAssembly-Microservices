@@ -1,9 +1,9 @@
-use std::net::SocketAddr;
+use hyper::body::Bytes;
 use hyper::server::conn::Http;
 use hyper::service::service_fn;
 use hyper::{Body, Method, Request, Response, StatusCode};
+use std::net::SocketAddr;
 use tokio::net::TcpListener;
-
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
 async fn handle_request(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
@@ -21,6 +21,13 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, hyper::Err
 
             let reversed_body = whole_body.iter().rev().cloned().collect::<Vec<u8>>();
             Ok(Response::new(Body::from(reversed_body)))
+        }
+
+        (&Method::POST, "/parrot") => {
+            let whole_body = hyper::body::to_bytes(req.into_body()).await?;
+            let parroted_whole_body = [Bytes::from("You said:"), whole_body].concat();
+
+            Ok(Response::new(Body::from(parroted_whole_body)))
         }
 
         // Return the 404 Not Found for other routes.
@@ -42,7 +49,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let (stream, _) = listener.accept().await?;
 
         tokio::task::spawn(async move {
-            if let Err(err) = Http::new().serve_connection(stream, service_fn(handle_request)).await {
+            if let Err(err) = Http::new()
+                .serve_connection(stream, service_fn(handle_request))
+                .await
+            {
                 println!("Error serving connection: {:?}", err);
             }
         });
