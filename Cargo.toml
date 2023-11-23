@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "http-server-lp-author/control",
+    "http-server-lp-author/function",
+    "http-server-lp-author/hello",
+    "http-server-lp-author/move",
+    "http-server-lp-author/server",
+    "http-server-lp-author/string",
+    "http-server-lp-author/struct",
+]
